@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="LongE2V: Long-Horizon Event-based Video Reconstruction, Prediction, and Frame Interpolation with Video Diffusion Models">
+  <title>LongE2V</title>
+  <link rel="icon" href="./assets/icons/favicon-camera-color.ico" sizes="16x16 32x32">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/favicon-camera-color-32.png">
+  <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon-camera-color.png">
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans:400,600|Noto+Sans:400,600|Castoro:400,600" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --ink: #4a4a4a;
+      --muted: #4a4a4a;
+      --line: #d9dee7;
+      --soft: #f5f7fb;
+      --blue: hsl(204, 86%, 53%);
+      --blue-soft: #e7f0ff;
+      --teal: #0c7c7c;
+      --orange: #c25b24;
+      --media-ratio: 4 / 3;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: #4a4a4a;
+      background: #ffffff;
+      font-family: "Noto Sans", sans-serif;
+      line-height: 1.55;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .container {
+      width: min(1040px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 48px 0 18px;
+      text-align: center;
+    }
+
+    .title {
+      margin: 0;
+      color: #363636;
+      font-family: "Google Sans", "Noto Sans", sans-serif;
+      font-size: 3rem;
+      font-weight: 600;
+      line-height: 1.125;
+    }
+
+    .subtitle {
+      max-width: 980px;
+      color: #363636;
+      margin: 8px auto 22px;
+      font-family: "Google Sans", "Noto Sans", sans-serif;
+      font-size: 2rem;
+      line-height: 1.125;
+      font-weight: 600;
+    }
+
+    .authors {
+      max-width: 940px;
+      margin: 0 auto 2px;
+      font-family: "Google Sans", "Noto Sans", sans-serif;
+      font-size: 1.25rem;
+      color: #4a4a4a;
+    }
+
+    .authors a {
+      color: hsl(204, 86%, 53%);
+    }
+
+    .authors a:hover {
+      text-decoration: underline;
+    }
+
+    .affiliation {
+      max-width: 940px;
+      margin: 2px auto 0;
+      font-family: "Google Sans", "Noto Sans", sans-serif;
+      font-size: 1.25rem;
+      line-height: 1.4;
+      color: #4a4a4a;
+    }
+
+    .venue {
+      margin: 6px 0 0;
+      color: #363636;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin: 10px 0 0;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.5em;
+      padding: 0.5em 1em;
+      border-radius: 9999px;
+      background: #363636;
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.5;
+      border: 1px solid transparent;
+      box-shadow: none;
+      white-space: nowrap;
+    }
+
+    .button .icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.5em;
+      height: 1.5em;
+      margin-left: calc(-0.5em - 1px);
+      margin-right: 0.25em;
+    }
+
+    .button:hover {
+      color: #ffffff;
+      background: #2f2f2f;
+      text-decoration: none;
+    }
+
+    .button.secondary {
+      color: #363636;
+      background: #ffffff;
+      border-color: #b9c2cf;
+    }
+
+    .button.secondary:hover {
+      color: #363636;
+      background: #f6f8fb;
+    }
+
+    section {
+      padding: 34px 0;
+    }
+
+    .teaser video,
+    .task-pane video,
+    .comparison-frame video,
+    .comparison-frame canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .teaser {
+      padding-top: 10px;
+      text-align: center;
+    }
+
+    .teaser-frame {
+      width: min(960px, 100%);
+      margin: 0 auto;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #050505;
+      box-shadow: 0 18px 40px rgba(15, 23, 32, 0.14);
+    }
+
+    .teaser-frame video {
+      aspect-ratio: 16 / 9;
+      object-fit: contain;
+    }
+
+    .tldr {
+      max-width: 900px;
+      margin: 24px auto 0;
+      padding: 13px 18px;
+      border-radius: 8px;
+      background: var(--blue-soft);
+      border: 1px solid #c6dcff;
+      font-size: 1.05rem;
+    }
+
+    .section-title {
+      margin: 0 0 18px;
+      color: #363636;
+      text-align: center;
+      font-family: "Noto Sans", sans-serif;
+      font-size: 2rem;
+      font-weight: 600;
+      line-height: 1.125;
+    }
+
+    .abstract {
+      max-width: 880px;
+      margin: 0 auto;
+      color: #4a4a4a;
+      font-size: 1.02rem;
+      text-align: justify;
+    }
+
+    .section-caption {
+      max-width: 780px;
+      margin: -10px auto 18px;
+      color: #4a4a4a;
+      text-align: center;
+      font-size: 1.05rem;
+      line-height: 1.45;
+    }
+
+    .task-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 22px;
+      margin: 24px auto 0;
+      max-width: 980px;
+    }
+
+    .task-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 16px;
+    }
+
+    .task-card-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .task-card h3 {
+      margin: 0 0 4px;
+      color: #363636;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .task-card p {
+      margin: 0;
+      color: #4a4a4a;
+      font-size: 0.98rem;
+    }
+
+    .task-input-strip {
+      display: grid;
+      gap: 10px;
+      align-items: stretch;
+      margin-bottom: 12px;
+    }
+
+    .strip-one {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .strip-two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .strip-three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .task-mini {
+      position: relative;
+      aspect-ratio: 4 / 3;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #050505;
+    }
+
+    .task-output {
+      position: relative;
+      width: min(620px, 100%);
+      aspect-ratio: 4 / 3;
+      margin: 0 auto;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #050505;
+    }
+
+    .task-mini video,
+    .task-mini img,
+    .task-output video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #050505;
+    }
+
+    .task-pane-label {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 2;
+      max-width: calc(100% - 16px);
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.62);
+      color: #ffffff;
+      font-size: 0.78rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-output .task-pane-label {
+      font-size: 0.86rem;
+    }
+
+    .condition-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .condition-tags span {
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #f5f5f5;
+      color: #4a4a4a;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .overview-figure {
+      width: min(980px, 100%);
+      margin: 24px auto 0;
+    }
+
+    .overview-figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .capability-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin: 24px auto 0;
+      max-width: 980px;
+    }
+
+    .capability-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .capability-card h3 {
+      margin: 0 0 14px;
+      color: #363636;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .capability-flow {
+      display: grid;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .capability-input,
+    .capability-output {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    .capability-input {
+      color: #4a4a4a;
+      background: #f5f5f5;
+      border: 1px solid #e1e1e1;
+    }
+
+    .capability-output {
+      color: #ffffff;
+      background: #363636;
+      border: 1px solid #363636;
+    }
+
+    .capability-arrow {
+      color: #363636;
+      font-size: 1.35rem;
+      font-weight: 600;
+      line-height: 1;
+    }
+
+    .results-section {
+      border-top: 1px solid #edf0f5;
+    }
+
+    .result-block {
+      margin: 22px auto 36px;
+      max-width: 900px;
+    }
+
+    .result-head {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .result-head h3 {
+      margin: 0;
+      color: #363636;
+      font-size: clamp(1.12rem, 1.7vw, 1.35rem);
+      line-height: 1.2;
+    }
+
+    .result-head p {
+      margin: 4px 0 0;
+      color: #4a4a4a;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 6px;
+      justify-content: center;
+      max-width: 100%;
+      overflow: visible;
+    }
+
+    .tab {
+      flex: 0 0 auto;
+      min-height: 34px;
+      padding: 0 10px;
+      border: 1px solid #cbd3de;
+      border-radius: 999px;
+      color: #4a4a4a;
+      background: #ffffff;
+      font: inherit;
+      font-size: 0.86rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tab:hover {
+      background: #f5f8fc;
+    }
+
+    .tab.active {
+      color: #ffffff;
+      border-color: var(--blue);
+      background: var(--blue);
+    }
+
+    .comparison-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: var(--media-ratio);
+      overflow: hidden;
+      border-radius: 8px;
+      background: #050505;
+      box-shadow: 0 14px 32px rgba(15, 23, 32, 0.12);
+    }
+
+    .comparison-frame video,
+    .comparison-frame canvas {
+      position: absolute;
+      inset: 0;
+      object-fit: contain;
+      background: #050505;
+    }
+
+    .video-right {
+      z-index: 1;
+    }
+
+    .video-left {
+      z-index: 2;
+      clip-path: inset(0 50% 0 0);
+    }
+
+    .compare-range {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      opacity: 0;
+      cursor: ew-resize;
+    }
+
+    .handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: calc(50% - 12px);
+      z-index: 6;
+      width: 24px;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .handle::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.45);
+    }
+
+    .handle::after {
+      content: "";
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    .media-label {
+      position: absolute;
+      z-index: 7;
+      top: 12px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.62);
+      color: #ffffff;
+      font-size: 0.88rem;
+      font-weight: 700;
+      pointer-events: none;
+      transition: opacity 0.16s ease;
+    }
+
+    .media-label.hidden {
+      opacity: 0;
+    }
+
+    .label-left {
+      left: 12px;
+    }
+
+    .label-right {
+      right: 12px;
+    }
+
+    .scene-strip {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin: 16px auto 0;
+      max-width: 900px;
+    }
+
+    .scene-thumb {
+      position: relative;
+      display: block;
+      flex: 0 1 98px;
+      min-height: 0;
+      padding: 0;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #050505;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(15, 23, 32, 0.1);
+    }
+
+    .scene-thumb:hover {
+      border-color: #b9dfff;
+    }
+
+    .scene-thumb.active {
+      border-color: var(--blue);
+    }
+
+    .scene-thumb img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      opacity: 0.78;
+      transition: opacity 0.16s ease;
+    }
+
+    .scene-thumb:hover img,
+    .scene-thumb.active img {
+      opacity: 1;
+    }
+
+    .bibtex {
+      max-width: 900px;
+      margin: 0 auto;
+      border-radius: 8px;
+      background: #f5f5f5;
+      color: #4a4a4a;
+      border: 0;
+      overflow-x: auto;
+      padding: 1.25rem 1.5rem;
+      font-size: 0.85rem;
+      line-height: 1.25;
+    }
+
+    footer {
+      padding: 28px 0 46px;
+      color: #4a4a4a;
+      text-align: center;
+      border-top: 1px solid #edf0f5;
+    }
+
+    @media (max-width: 820px) {
+      .hero {
+        padding-top: 38px;
+      }
+
+      .task-grid,
+      .capability-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .task-card-header {
+        display: block;
+      }
+
+      .condition-tags {
+        justify-content: flex-start;
+        margin-top: 10px;
+      }
+
+      .strip-two,
+      .strip-three {
+        grid-template-columns: 1fr;
+      }
+
+
+      .result-head {
+        display: block;
+      }
+
+      .tabs {
+        justify-content: center;
+        margin-top: 0;
+      }
+
+      .scene-strip {
+        max-width: none;
+      }
+
+      .scene-thumb {
+        flex-basis: min(92px, calc(25% - 9px));
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="container">
+      <h1 class="title">LongE2V</h1>
+      <p class="subtitle">Long-Horizon Event-based Video Reconstruction, Prediction, and Frame Interpolation with Video Diffusion Models</p>
+      <p class="authors">
+        <a href="https://cdfan0627.github.io/">Cheng-De Fan</a>, <a href="https://www.linkedin.com/in/ray-tuan-mu-a46257246/">Chun-Wei Tuan Mu</a>, <a href="https://chenwei891213.github.io/">Chen-Wei Chang</a>, <a href="https://linjohnss.github.io/">Chin-Yang Lin</a>,<br>
+        <a href="https://scholar.google.com/citations?user=6aY6QBgAAAAJ&amp;hl=zh-TW">Kun-Ru Wu</a>, <a href="https://sites.google.com/view/yctseng">Yu-Chee Tseng</a>, <a href="https://yulunalexliu.github.io/">Yu-Lun Liu</a>
+      </p>
+      <p class="affiliation">National Yang Ming Chiao Tung University</p>
+      <p class="venue">SIGGRAPH 2026</p>
+      <div class="links">
+        <a class="button" href="./_SIGGRAPH_2026__Event_Video_Diffusion.pdf"><span class="icon"><i class="ai ai-arxiv"></i></span><span>arXiv</span></a>
+        <a class="button" href="https://github.com/cdfan0627/LongE2V"><span class="icon"><i class="fab fa-github"></i></span><span>Code</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="teaser">
+      <div class="container">
+        <div class="teaser-frame">
+          <video autoplay muted loop playsinline controls>
+            <source src="./assets/videos/teaser.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="tldr">
+          <strong>TL;DR:</strong> We propose a unified video diffusion framework for turning sparse event streams into stable videos across reconstruction, prediction, and frame interpolation.
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <h2 class="section-title">Abstract</h2>
+        <p class="abstract">
+          Recovering high-quality video from sparse event streams is a challenging task. Regression methods often blur textures, while existing generative models struggle with long-term stability. We propose LongE2V, a novel approach that leverages pre-trained video diffusion priors to jointly handle event-based video reconstruction, prediction, and frame interpolation. By fine-tuning a foundational video model, our approach achieves high data efficiency and superior perceptual quality. We introduce Autoregressive Unrolling and Adaptive Context Switching to mitigate temporal drift in extremely long sequences. We also propose Reencoding Alignment with Cross Residual Correction to ensure precise bidirectional consistency during frame interpolation. Furthermore, Event Voxel Density Augmentation ensures robustness across varying sensor resolutions. Extensive experiments on real-world benchmarks demonstrate that LongE2V outperforms state-of-the-art methods across all three tasks, exhibiting exceptional temporal coherence and zero-shot generalization.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <h2 class="section-title">What Can LongE2V Do?</h2>
+        <figure class="overview-figure">
+          <img src="./assets/figures/teaser.png" alt="LongE2V handles event-based video reconstruction, prediction, and frame interpolation.">
+        </figure>
+      </div>
+    </section>
+
+    <section class="results-section">
+      <div class="container">
+        <h2 class="section-title">Reconstruction Results</h2>
+
+        <article class="result-block result-gallery" data-default-tab="events" style="--media-ratio: 4 / 3;">
+          <div class="result-head">
+            <div class="tabs">
+              <button class="tab active" type="button" data-right-key="events" data-left-label="LongE2V" data-right-label="Events">Events</button>
+              <button class="tab" type="button" data-right-key="e2vid" data-left-label="LongE2V" data-right-label="E2VID">E2VID</button>
+              <button class="tab" type="button" data-right-key="e2vidplus" data-left-label="LongE2V" data-right-label="E2VID+">E2VID+</button>
+              <button class="tab" type="button" data-right-key="firenet" data-left-label="LongE2V" data-right-label="FireNet">FireNet</button>
+              <button class="tab" type="button" data-right-key="firenetplus" data-left-label="LongE2V" data-right-label="FireNet+">FireNet+</button>
+              <button class="tab" type="button" data-right-key="etnet" data-left-label="LongE2V" data-right-label="ET-Net">ET-Net</button>
+              <button class="tab" type="button" data-right-key="spade" data-left-label="LongE2V" data-right-label="SPADE-E2VID">SPADE-E2VID</button>
+              <button class="tab" type="button" data-right-key="ssl" data-left-label="LongE2V" data-right-label="SSL-E2VID">SSL-E2VID</button>
+              <button class="tab" type="button" data-right-key="hypere2vid" data-left-label="LongE2V" data-right-label="HyperE2VID">HyperE2VID</button>
+            </div>
+          </div>
+          <div class="comparison-frame">
+            <video class="video-right" muted loop playsinline></video>
+            <video class="video-left" muted loop playsinline></video>
+            <span class="media-label label-left">LongE2V</span>
+            <span class="media-label label-right">Events</span>
+            <input class="compare-range" type="range" min="0" max="100" value="50" aria-label="Comparison position">
+            <span class="handle"></span>
+          </div>
+          <div class="scene-strip" aria-label="Reconstruction scenes">
+            <button class="scene-thumb active" type="button" data-ratio="4 / 3" data-ours="./assets/videos/recon_bike_ours.mp4" data-events="./assets/videos/recon_bike_events.mp4" data-e2vid="./assets/videos/recon_bike_e2vid.mp4" data-e2vidplus="./assets/videos/recon_bike_e2vidplus.mp4" data-firenet="./assets/videos/recon_bike_firenet.mp4" data-firenetplus="./assets/videos/recon_bike_firenetplus.mp4" data-etnet="./assets/videos/recon_bike_etnet.mp4" data-spade="./assets/videos/recon_bike_spade.mp4" data-ssl="./assets/videos/recon_bike_ssl.mp4" data-hypere2vid="./assets/videos/recon_bike_hypere2vid.mp4" aria-label="Select reconstruction scene">
+              <img src="./assets/thumbs/recon_bike_thumb.png" alt="Reconstruction scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="4 / 3" data-ours="./assets/videos/recon_boxes_ours.mp4" data-events="./assets/videos/recon_boxes_events.mp4" data-e2vid="./assets/videos/recon_boxes_e2vid.mp4" data-e2vidplus="./assets/videos/recon_boxes_e2vidplus.mp4" data-firenet="./assets/videos/recon_boxes_firenet.mp4" data-firenetplus="./assets/videos/recon_boxes_firenetplus.mp4" data-etnet="./assets/videos/recon_boxes_etnet.mp4" data-spade="./assets/videos/recon_boxes_spade.mp4" data-ssl="./assets/videos/recon_boxes_ssl.mp4" data-hypere2vid="./assets/videos/recon_boxes_hypere2vid.mp4" aria-label="Select reconstruction scene">
+              <img src="./assets/thumbs/recon_boxes_thumb.png" alt="Reconstruction scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="4 / 3" data-ours="./assets/videos/recon_desk_ours.mp4" data-events="./assets/videos/recon_desk_events.mp4" data-e2vid="./assets/videos/recon_desk_e2vid.mp4" data-e2vidplus="./assets/videos/recon_desk_e2vidplus.mp4" data-firenet="./assets/videos/recon_desk_firenet.mp4" data-firenetplus="./assets/videos/recon_desk_firenetplus.mp4" data-etnet="./assets/videos/recon_desk_etnet.mp4" data-spade="./assets/videos/recon_desk_spade.mp4" data-ssl="./assets/videos/recon_desk_ssl.mp4" data-hypere2vid="./assets/videos/recon_desk_hypere2vid.mp4" aria-label="Select reconstruction scene">
+              <img src="./assets/thumbs/recon_desk_thumb.png" alt="Reconstruction scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="4 / 3" data-ours="./assets/videos/recon_posters_ours.mp4" data-events="./assets/videos/recon_posters_events.mp4" data-e2vid="./assets/videos/recon_posters_e2vid.mp4" data-e2vidplus="./assets/videos/recon_posters_e2vidplus.mp4" data-firenet="./assets/videos/recon_posters_firenet.mp4" data-firenetplus="./assets/videos/recon_posters_firenetplus.mp4" data-etnet="./assets/videos/recon_posters_etnet.mp4" data-spade="./assets/videos/recon_posters_spade.mp4" data-ssl="./assets/videos/recon_posters_ssl.mp4" data-hypere2vid="./assets/videos/recon_posters_hypere2vid.mp4" aria-label="Select reconstruction scene">
+              <img src="./assets/thumbs/recon_posters_thumb.png" alt="Reconstruction scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="4 / 3" data-ours="./assets/videos/recon_pillar2_ours.mp4" data-events="./assets/videos/recon_pillar2_events.mp4" data-e2vid="./assets/videos/recon_pillar2_e2vid.mp4" data-e2vidplus="./assets/videos/recon_pillar2_e2vidplus.mp4" data-firenet="./assets/videos/recon_pillar2_firenet.mp4" data-firenetplus="./assets/videos/recon_pillar2_firenetplus.mp4" data-etnet="./assets/videos/recon_pillar2_etnet.mp4" data-spade="./assets/videos/recon_pillar2_spade.mp4" data-ssl="./assets/videos/recon_pillar2_ssl.mp4" data-hypere2vid="./assets/videos/recon_pillar2_hypere2vid.mp4" aria-label="Select reconstruction scene">
+              <img src="./assets/thumbs/recon_pillar2_thumb.png" alt="Reconstruction scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="4 / 3" data-ours="./assets/videos/recon_reflective_ours.mp4" data-events="./assets/videos/recon_reflective_events.mp4" data-e2vid="./assets/videos/recon_reflective_e2vid.mp4" data-e2vidplus="./assets/videos/recon_reflective_e2vidplus.mp4" data-firenet="./assets/videos/recon_reflective_firenet.mp4" data-firenetplus="./assets/videos/recon_reflective_firenetplus.mp4" data-etnet="./assets/videos/recon_reflective_etnet.mp4" data-spade="./assets/videos/recon_reflective_spade.mp4" data-ssl="./assets/videos/recon_reflective_ssl.mp4" data-hypere2vid="./assets/videos/recon_reflective_hypere2vid.mp4" aria-label="Select reconstruction scene">
+              <img src="./assets/thumbs/recon_reflective_thumb.png" alt="Reconstruction scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="346 / 260" data-ours="./assets/videos/recon_indoor_ours.mp4" data-events="./assets/videos/recon_indoor_events.mp4" data-e2vid="./assets/videos/recon_indoor_e2vid.mp4" data-e2vidplus="./assets/videos/recon_indoor_e2vidplus.mp4" data-firenet="./assets/videos/recon_indoor_firenet.mp4" data-firenetplus="./assets/videos/recon_indoor_firenetplus.mp4" data-etnet="./assets/videos/recon_indoor_etnet.mp4" data-spade="./assets/videos/recon_indoor_spade.mp4" data-ssl="./assets/videos/recon_indoor_ssl.mp4" data-hypere2vid="./assets/videos/recon_indoor_hypere2vid.mp4" aria-label="Select reconstruction scene">
+              <img src="./assets/thumbs/recon_indoor_thumb.png" alt="Reconstruction scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="4 / 3" data-ours="./assets/videos/recon_stilllife_ours.mp4" data-events="./assets/videos/recon_stilllife_events.mp4" data-e2vid="./assets/videos/recon_stilllife_e2vid.mp4" data-e2vidplus="./assets/videos/recon_stilllife_e2vidplus.mp4" data-firenet="./assets/videos/recon_stilllife_firenet.mp4" data-firenetplus="./assets/videos/recon_stilllife_firenetplus.mp4" data-etnet="./assets/videos/recon_stilllife_etnet.mp4" data-spade="./assets/videos/recon_stilllife_spade.mp4" data-ssl="./assets/videos/recon_stilllife_ssl.mp4" data-hypere2vid="./assets/videos/recon_stilllife_hypere2vid.mp4" aria-label="Select reconstruction scene">
+              <img src="./assets/thumbs/recon_stilllife_thumb.png" alt="Reconstruction scene thumbnail">
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="results-section">
+      <div class="container">
+        <h2 class="section-title">Prediction Results</h2>
+
+        <article class="result-block result-gallery" data-default-tab="events" style="--media-ratio: 4 / 3;">
+          <div class="result-head">
+            <div class="tabs">
+              <button class="tab active" type="button" data-right-key="events" data-left-label="LongE2V" data-right-label="Events">Events</button>
+              <button class="tab" type="button" data-right-key="vdm" data-left-label="LongE2V" data-right-label="VDM-EVFI">VDM-EVFI</button>
+            </div>
+          </div>
+          <div class="comparison-frame">
+            <video class="video-right" muted loop playsinline></video>
+            <video class="video-left" muted loop playsinline></video>
+            <span class="media-label label-left">LongE2V</span>
+            <span class="media-label label-right">Events</span>
+            <input class="compare-range" type="range" min="0" max="100" value="50" aria-label="Comparison position">
+            <span class="handle"></span>
+          </div>
+          <div class="scene-strip" aria-label="Prediction scenes">
+            <button class="scene-thumb active" type="button" data-ratio="4 / 3" data-ours="./assets/videos/pred_slowfast_ours.mp4" data-events="./assets/videos/pred_slowfast_events.mp4" data-vdm="./assets/videos/pred_slowfast_vdm_evfi.mp4" aria-label="Select prediction scene">
+              <img src="./assets/thumbs/pred_slowfast_thumb.png" alt="Prediction scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="4 / 3" data-ours="./assets/videos/pred_pillar1_ours.mp4" data-events="./assets/videos/pred_pillar1_events.mp4" data-vdm="./assets/videos/pred_pillar1_vdm_evfi.mp4" aria-label="Select prediction scene">
+              <img src="./assets/thumbs/pred_pillar1_thumb.png" alt="Prediction scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="4 / 3" data-ours="./assets/videos/pred_slowhand_ours.mp4" data-events="./assets/videos/pred_slowhand_events.mp4" data-vdm="./assets/videos/pred_slowhand_vdm_evfi.mp4" aria-label="Select prediction scene">
+              <img src="./assets/thumbs/pred_slowhand_thumb.png" alt="Prediction scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="4 / 3" data-ours="./assets/videos/pred_deskslow_ours.mp4" data-events="./assets/videos/pred_deskslow_events.mp4" data-vdm="./assets/videos/pred_deskslow_vdm_evfi.mp4" aria-label="Select prediction scene">
+              <img src="./assets/thumbs/pred_deskslow_thumb.png" alt="Prediction scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="346 / 260" data-ours="./assets/videos/pred_indoor2_ours.mp4" data-events="./assets/videos/pred_indoor2_events.mp4" data-vdm="./assets/videos/pred_indoor2_vdm_evfi.mp4" aria-label="Select prediction scene">
+              <img src="./assets/thumbs/pred_indoor2_thumb.png" alt="Prediction scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="4 / 3" data-ours="./assets/videos/pred_calibration_ours.mp4" data-events="./assets/videos/pred_calibration_events.mp4" data-vdm="./assets/videos/pred_calibration_vdm_evfi.mp4" aria-label="Select prediction scene">
+              <img src="./assets/thumbs/pred_calibration_thumb.png" alt="Prediction scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="4 / 3" data-ours="./assets/videos/pred_shapes_ours.mp4" data-events="./assets/videos/pred_shapes_events.mp4" data-vdm="./assets/videos/pred_shapes_vdm_evfi.mp4" aria-label="Select prediction scene">
+              <img src="./assets/thumbs/pred_shapes_thumb.png" alt="Prediction scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="4 / 3" data-ours="./assets/videos/pred_office_ours.mp4" data-events="./assets/videos/pred_office_events.mp4" data-vdm="./assets/videos/pred_office_vdm_evfi.mp4" aria-label="Select prediction scene">
+              <img src="./assets/thumbs/pred_office_thumb.png" alt="Prediction scene thumbnail">
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="results-section">
+      <div class="container">
+        <h2 class="section-title">Frame Interpolation Results</h2>
+
+        <article class="result-block result-gallery" data-default-tab="events" style="--media-ratio: 970 / 624;">
+          <div class="result-head">
+            <div class="tabs">
+              <button class="tab active" type="button" data-right-key="events" data-left-label="LongE2V" data-right-label="Events">Events</button>
+              <button class="tab" type="button" data-right-key="cbmnet" data-left-label="LongE2V" data-right-label="CBMNet-Large">CBMNet-Large</button>
+              <button class="tab" type="button" data-right-key="tlxnet" data-left-label="LongE2V" data-right-label="TLXNet+">TLXNet+</button>
+            </div>
+          </div>
+          <div class="comparison-frame">
+            <video class="video-right" muted loop playsinline></video>
+            <video class="video-left" muted loop playsinline></video>
+            <span class="media-label label-left">LongE2V</span>
+            <span class="media-label label-right">Events</span>
+            <input class="compare-range" type="range" min="0" max="100" value="50" aria-label="Comparison position">
+            <span class="handle"></span>
+          </div>
+          <div class="scene-strip" aria-label="Frame interpolation scenes">
+            <button class="scene-thumb active" type="button" data-ratio="970 / 624" data-ours="./assets/videos/interp_basket_ours.mp4" data-events="./assets/videos/interp_basket_events.mp4" data-cbmnet="./assets/videos/interp_basket_cbmnet.mp4" data-tlxnet="./assets/videos/interp_basket_tlxnet.mp4" aria-label="Select frame interpolation scene">
+              <img src="./assets/thumbs/interp_basket_thumb.png" alt="Frame interpolation scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="970 / 624" data-ours="./assets/videos/interp_horse_ours.mp4" data-events="./assets/videos/interp_horse_events.mp4" data-cbmnet="./assets/videos/interp_horse_cbmnet.mp4" data-tlxnet="./assets/videos/interp_horse_tlxnet.mp4" aria-label="Select frame interpolation scene">
+              <img src="./assets/thumbs/interp_horse_thumb.png" alt="Frame interpolation scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="970 / 624" data-ours="./assets/videos/interp_elastic_ours.mp4" data-events="./assets/videos/interp_elastic_events.mp4" data-cbmnet="./assets/videos/interp_elastic_cbmnet.mp4" data-tlxnet="./assets/videos/interp_elastic_tlxnet.mp4" aria-label="Select frame interpolation scene">
+              <img src="./assets/thumbs/interp_elastic_thumb.png" alt="Frame interpolation scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="970 / 624" data-ours="./assets/videos/interp_football_ours.mp4" data-events="./assets/videos/interp_football_events.mp4" data-cbmnet="./assets/videos/interp_football_cbmnet.mp4" data-tlxnet="./assets/videos/interp_football_tlxnet.mp4" aria-label="Select frame interpolation scene">
+              <img src="./assets/thumbs/interp_football_thumb.png" alt="Frame interpolation scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="970 / 624" data-ours="./assets/videos/interp_water_tank_ours.mp4" data-events="./assets/videos/interp_water_tank_events.mp4" data-cbmnet="./assets/videos/interp_water_tank_cbmnet.mp4" data-tlxnet="./assets/videos/interp_water_tank_tlxnet.mp4" aria-label="Select frame interpolation scene">
+              <img src="./assets/thumbs/interp_water_tank_thumb.png" alt="Frame interpolation scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="970 / 624" data-ours="./assets/videos/interp_ball_ours.mp4" data-events="./assets/videos/interp_ball_events.mp4" data-cbmnet="./assets/videos/interp_ball_cbmnet.mp4" data-tlxnet="./assets/videos/interp_ball_tlxnet.mp4" aria-label="Select frame interpolation scene">
+              <img src="./assets/thumbs/interp_ball_thumb.png" alt="Frame interpolation scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="970 / 624" data-ours="./assets/videos/interp_fire_ours.mp4" data-events="./assets/videos/interp_fire_events.mp4" data-cbmnet="./assets/videos/interp_fire_cbmnet.mp4" data-tlxnet="./assets/videos/interp_fire_tlxnet.mp4" aria-label="Select frame interpolation scene">
+              <img src="./assets/thumbs/interp_fire_thumb.png" alt="Frame interpolation scene thumbnail">
+            </button>
+            <button class="scene-thumb" type="button" data-ratio="970 / 624" data-ours="./assets/videos/interp_rope_ours.mp4" data-events="./assets/videos/interp_rope_events.mp4" data-cbmnet="./assets/videos/interp_rope_cbmnet.mp4" data-tlxnet="./assets/videos/interp_rope_tlxnet.mp4" aria-label="Select frame interpolation scene">
+              <img src="./assets/thumbs/interp_rope_thumb.png" alt="Frame interpolation scene thumbnail">
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="bibtex">
+      <div class="container">
+        <h2 class="section-title">BibTeX</h2>
+        <pre class="bibtex">@inproceedings{fan2026longe2v,
+  title     = {LongE2V: Long-Horizon Event-based Video Reconstruction, Prediction, and Frame Interpolation with Video Diffusion Models},
+  author    = {Fan, Cheng-De and Mu, Chun-Wei Tuan and Chang, Chen-Wei and Lin, Chin-Yang and Wu, Kun-Ru and Tseng, Yu-Chee and Liu, Yu-Lun},
+  booktitle = {SIGGRAPH Conference Papers},
+  year      = {2026}
+}</pre>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const assetVersion = "selected-scenes-20260623-paired-canvas";
+
+    function versionedAsset(src) {
+      return src + (src.includes("?") ? "&" : "?") + "v=" + assetVersion;
+    }
+
+    function setupComparison(block) {
+      const tabs = Array.from(block.querySelectorAll(".tab"));
+      const scenes = Array.from(block.querySelectorAll(".scene-thumb"));
+      const frame = block.querySelector(".comparison-frame");
+      const oldLeftVideo = frame.querySelector(".video-left");
+      const oldRightVideo = frame.querySelector(".video-right");
+      const range = frame.querySelector(".compare-range");
+      const handle = frame.querySelector(".handle");
+      const leftLabel = frame.querySelector(".label-left");
+      const rightLabel = frame.querySelector(".label-right");
+      const rightCanvas = document.createElement("canvas");
+      const leftCanvas = document.createElement("canvas");
+      const player = document.createElement("video");
+      const rightContext = rightCanvas.getContext("2d");
+      const leftContext = leftCanvas.getContext("2d");
+      let drawId = null;
+      let isVisible = false;
+      let pendingPairSrc = null;
+      let pendingTime = 0;
+      let loadToken = 0;
+
+      rightCanvas.className = "video-right comparison-canvas";
+      leftCanvas.className = "video-left comparison-canvas";
+      frame.insertBefore(rightCanvas, oldRightVideo);
+      frame.insertBefore(leftCanvas, oldLeftVideo);
+      oldRightVideo.remove();
+      oldLeftVideo.remove();
+
+      player.muted = true;
+      player.loop = true;
+      player.playsInline = true;
+      player.preload = "auto";
+      player.style.display = "none";
+      frame.appendChild(player);
+
+      function setPosition(value) {
+        const clamped = Math.max(0, Math.min(100, Number(value)));
+        leftCanvas.style.clipPath = "inset(0 " + (100 - clamped) + "% 0 0)";
+        handle.style.left = "calc(" + clamped + "% - 12px)";
+        leftLabel.classList.toggle("hidden", clamped < 18);
+        rightLabel.classList.toggle("hidden", clamped > 82);
+      }
+
+      function getActiveTab() {
+        return tabs.find(tab => tab.classList.contains("active")) || tabs[0];
+      }
+
+      function getActiveScene() {
+        return scenes.find(scene => scene.classList.contains("active")) || scenes[0];
+      }
+
+      function basename(src) {
+        return src.split("/").pop().replace(/\.mp4(?:\?.*)?$/, "");
+      }
+
+      function pairedAsset(leftSrc, rightSrc) {
+        return "./assets/videos/pairs/" + basename(leftSrc) + "__" + basename(rightSrc) + ".mp4";
+      }
+
+      function waitForReady(video) {
+        if (video.readyState >= 2) {
+          return Promise.resolve();
+        }
+
+        return new Promise(resolve => {
+          const done = () => {
+            clearTimeout(timeoutId);
+            video.removeEventListener("loadeddata", done);
+            video.removeEventListener("canplay", done);
+            video.removeEventListener("error", done);
+            resolve();
+          };
+          const timeoutId = setTimeout(done, 1200);
+
+          video.addEventListener("loadeddata", done, { once: true });
+          video.addEventListener("canplay", done, { once: true });
+          video.addEventListener("error", done, { once: true });
+        });
+      }
+
+      function resizeCanvas(canvas, width, height) {
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+        }
+      }
+
+      function drawFrame() {
+        const videoWidth = player.videoWidth;
+        const videoHeight = player.videoHeight;
+        if (videoWidth > 0 && videoHeight > 0) {
+          const halfWidth = Math.floor(videoWidth / 2);
+          resizeCanvas(leftCanvas, halfWidth, videoHeight);
+          resizeCanvas(rightCanvas, halfWidth, videoHeight);
+          leftContext.drawImage(player, 0, 0, halfWidth, videoHeight, 0, 0, halfWidth, videoHeight);
+          rightContext.drawImage(player, halfWidth, 0, halfWidth, videoHeight, 0, 0, halfWidth, videoHeight);
+        }
+      }
+
+      function drawLoop() {
+        drawFrame();
+        if (isVisible && !document.hidden) {
+          drawId = requestAnimationFrame(drawLoop);
+        } else {
+          drawId = null;
+        }
+      }
+
+      function startDrawing() {
+        if (!drawId) {
+          drawId = requestAnimationFrame(drawLoop);
+        }
+      }
+
+      async function seekPlayer(time) {
+        const duration = Number.isFinite(player.duration) ? player.duration : Infinity;
+        const target = Math.max(0, Math.min(time, duration - 0.05));
+        if (Math.abs(player.currentTime - target) < 0.001) {
+          return;
+        }
+
+        await new Promise(resolve => {
+          const done = () => {
+            clearTimeout(timeoutId);
+            player.removeEventListener("seeked", done);
+            player.removeEventListener("error", done);
+            resolve();
+          };
+          const timeoutId = setTimeout(done, 600);
+
+          player.addEventListener("seeked", done, { once: true });
+          player.addEventListener("error", done, { once: true });
+          player.currentTime = target;
+        });
+      }
+
+      async function loadPair(pairSrc, startTime) {
+        const token = ++loadToken;
+        pendingPairSrc = pairSrc;
+        pendingTime = startTime;
+        if (!isVisible || document.hidden) {
+          return;
+        }
+
+        player.pause();
+        if (player.dataset.baseSrc !== pairSrc) {
+          player.dataset.baseSrc = pairSrc;
+          player.src = versionedAsset(pairSrc);
+          player.load();
+          pendingTime = 0;
+        }
+
+        await waitForReady(player);
+        if (token !== loadToken || !isVisible || document.hidden) {
+          return;
+        }
+
+        await seekPlayer(pendingTime);
+        if (token !== loadToken || !isVisible || document.hidden) {
+          return;
+        }
+
+        drawFrame();
+        startDrawing();
+        player.play().catch(() => {});
+      }
+
+      function resumePlayback() {
+        if (document.hidden || !isVisible || !pendingPairSrc) {
+          return;
+        }
+        loadPair(pendingPairSrc, player.currentTime || pendingTime || 0);
+      }
+
+      function stopPlayback() {
+        pendingTime = player.currentTime || pendingTime || 0;
+        player.pause();
+        if (drawId) {
+          cancelAnimationFrame(drawId);
+          drawId = null;
+        }
+      }
+
+      function pausePlayback() {
+        isVisible = false;
+        stopPlayback();
+      }
+
+      function activate(tab) {
+        const scene = getActiveScene();
+        const rightKey = tab.dataset.rightKey;
+        const rightSrc = scene.dataset[rightKey];
+        const pairSrc = pairedAsset(scene.dataset.ours, rightSrc);
+
+        tabs.forEach(item => item.classList.toggle("active", item === tab));
+        leftLabel.textContent = tab.dataset.leftLabel;
+        rightLabel.textContent = tab.dataset.rightLabel;
+        block.style.setProperty("--media-ratio", scene.dataset.ratio || "4 / 3");
+        loadPair(pairSrc, 0);
+      }
+
+      function activateScene(scene) {
+        scenes.forEach(item => item.classList.toggle("active", item === scene));
+        activate(getActiveTab());
+      }
+
+      tabs.forEach(tab => {
+        tab.addEventListener("click", () => activate(tab));
+      });
+
+      scenes.forEach(scene => {
+        scene.addEventListener("click", () => activateScene(scene));
+      });
+
+      player.addEventListener("play", startDrawing);
+      player.addEventListener("seeked", drawFrame);
+      player.addEventListener("loadeddata", drawFrame);
+      range.addEventListener("input", event => setPosition(event.target.value));
+      setPosition(range.value);
+      if (!("IntersectionObserver" in window)) {
+        isVisible = true;
+      }
+      activate(getActiveTab());
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          stopPlayback();
+        } else {
+          resumePlayback();
+        }
+      });
+
+      window.addEventListener("focus", resumePlayback);
+      window.addEventListener("pageshow", resumePlayback);
+
+      if ("IntersectionObserver" in window) {
+        const observer = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              isVisible = true;
+              resumePlayback();
+            } else {
+              pausePlayback();
+            }
+          });
+        }, { threshold: 0.15 });
+
+        observer.observe(block);
+      }
+    }
+
+    document.querySelectorAll(".result-block").forEach(setupComparison);
+  </script>
+</body>
+</html>

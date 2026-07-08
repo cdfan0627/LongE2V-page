@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="LongE2V camera favicon">
+  <rect width="256" height="256" rx="56" fill="#363636"/>
+  <path d="M68 88h34l15-18h42l15 18h14c22 0 34 12 34 34v56c0 22-12 34-34 34H68c-22 0-34-12-34-34v-56c0-22 12-34 34-34Z" fill="none" stroke="#ffffff" stroke-width="18" stroke-linejoin="round"/>
+  <circle cx="128" cy="151" r="39" fill="none" stroke="#ffffff" stroke-width="18"/>
+  <circle cx="188" cy="119" r="10" fill="#ffffff"/>
+</svg>

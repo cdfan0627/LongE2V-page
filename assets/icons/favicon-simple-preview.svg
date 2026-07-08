@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="LongE2V simple favicon preview">
+  <rect width="256" height="256" rx="56" fill="#363636"/>
+  <g fill="none" stroke-linecap="round">
+    <path d="M74 132c0-36 25-66 61-74 23-5 46 1 63 15" stroke="#f7fbff" stroke-width="22" opacity="0.96"/>
+    <path d="M184 78c25 24 32 62 16 95-15 31-47 50-83 47" stroke="#24b7ff" stroke-width="22"/>
+    <path d="M108 218c-34-8-58-38-60-74-1-23 7-44 22-60" stroke="#ff5a8a" stroke-width="22"/>
+    <path d="M95 99c18-20 49-25 73-11" stroke="#ffffff" stroke-width="12" opacity="0.42"/>
+    <path d="M166 154c-14 18-40 24-61 14" stroke="#ffffff" stroke-width="12" opacity="0.32"/>
+  </g>
+  <circle cx="196" cy="77" r="10" fill="#24b7ff"/>
+  <circle cx="69" cy="83" r="8" fill="#ff5a8a"/>
+</svg>
